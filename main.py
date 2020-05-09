@@ -11,19 +11,16 @@ from ulauncher.api.shared.event import KeywordQueryEvent
 from ulauncher.api.shared.item.ExtensionResultItem import ExtensionResultItem
 from ulauncher.api.shared.action.RenderResultListAction import RenderResultListAction
 from ulauncher.api.shared.action.CopyToClipboardAction import CopyToClipboardAction
+from random import SystemRandom
 
-# We fall back to pwgen command if the module is not there
-try:
-    import pwgen
-    pwgen_module = True ## pylint: disable=invalid-name
-except ImportError:
-    pwgen_module = False ## pylint: disable=invalid-name
+choice = SystemRandom().choice
 
 LOGGER = logging.getLogger(__name__)
 
 
 def is_exist(program):
     """ Checks if the pwgen cli is installed in the system """
+
     def is_exe(fpath):
         return path.isfile(fpath) and access(fpath, X_OK)
 
@@ -63,28 +60,10 @@ class KeywordQueryEventListener(EventListener):
 
         pw_count = int(extension.preferences['pw_count'])
 
-        if pwgen_module:
-            passwords = pwgen.pwgen(
-                pw_length,
-                pw_count,
-                False,
-                False,
-                True,
-                True,
-                False,
-                True,
-                '!$.*+-_~()][?%&@,;',
-                True
-            )
-        elif not pwgen_module and is_exist(program='pwgen'):
-            command = 'pwgen -1 -c -n -y {} {}'.format(
-                str(pw_length),
-                str(pw_count)
-            )
-            output = check_output(command.split(' '))
-            passwords = output.splitlines()
-        else:
-            passwords = ['Could not find neither pwgen module nor the command!']
+        passwords = self.generatePasswords(
+            pw_length,
+            pw_count,
+        )
 
         for password in passwords:
             items.append(
@@ -98,6 +77,18 @@ class KeywordQueryEventListener(EventListener):
             )
 
         return RenderResultListAction(items)
+
+    def generatePasswords(self, length, count):
+        chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!$%&()*+,-./:;=?@[]^_`{|}~'
+        passwords = []
+        while len(passwords) < int(count):
+            password = "".join(choice(chars) for x in range(length))
+            passwords.append(password)
+
+        if len(passwords) == 1:
+            return passwords[0]
+
+        return passwords
 
 
 if __name__ == '__main__':
