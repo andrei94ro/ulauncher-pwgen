@@ -73,7 +73,7 @@ class KeywordQueryEventListener(EventListener):
                 True,
                 False,
                 True,
-                '!$.#*+-_~()][?%&@,;',
+                '!$.*+-_~()][?%&@,;',
                 True
             )
         elif not pwgen_module and is_exist(program='pwgen'):
